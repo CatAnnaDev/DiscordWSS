@@ -6,12 +6,15 @@ using System.IO;
 using System.Net.WebSockets;
 using System.Reactive.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Websocket.Client;
 
 namespace DiscordWSS {
     public class Program {
+
+        public static string Save_dir_name = @"/img"; // path where save 
 
         static void Main(string[] args) {
 
@@ -79,23 +82,52 @@ namespace DiscordWSS {
                                         $"Received message: " +
                                         $"[{myDeserializedClass.s}] {myDeserializedClass.t} \n " +
                                         $"{myDeserializedClass.d.author?.username}#{myDeserializedClass.d.author?.discriminator} : " +
-                                        $"{myDeserializedClass.d.content}");
+                                        $"{(myDeserializedClass.d.content.Contains("https://") ? MakeLink(myDeserializedClass.d.content) : myDeserializedClass.d.content)}");
+
+                                    string MakeLink(string txt) {
+                                        foreach(Match item in Regex.Matches(txt, @"(http|ftp|https):\/\/([\w\-_]+(?:(?:\.[\w\-_]+)+))([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?")) {
+                                            return item.Value;
+                                        }
+                                        return txt;
+                                    }
 
                                     if(myDeserializedClass.d.attachments != null) {
-                                        foreach(var attachment in myDeserializedClass.d.attachments) {
-                                            Console.WriteLine($"Received message: {attachment.url}");
+                                        try {
+                                            foreach(var attachment in myDeserializedClass.d.attachments) {
+                                                Console.WriteLine($"Received message: {attachment.url}");
+                                                Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), new Uri(attachment.url)).Wait());
+                                                v.Start();
+                                            }
                                         }
+                                        catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); };
                                         
                                     }
 
                                     if(myDeserializedClass.d.embeds != null) {
                                         foreach(var attachment in myDeserializedClass.d.embeds) {
-                                            if(attachment.image != null)
-                                                Console.WriteLine($"image : {attachment.image.url}");
-                                            else if(attachment.video != null)
-                                                Console.WriteLine($"vidéo : {attachment.video.url}");
-                                            else if(attachment.url != null)
-                                                Console.WriteLine($"url : {attachment.url}");
+                                            if(attachment.image != null) {
+                                                try {
+                                                    Console.WriteLine($"image : {attachment.image.url}");
+                                                    Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), new Uri(attachment.image.url)).Wait());
+                                                    v.Start();
+                                                }
+                                                catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); }
+
+                                            } else if(attachment.video != null) {
+                                                try {
+                                                    Console.WriteLine($"vidéo : {attachment.video.url}");
+                                                    Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), new Uri(attachment.video.url)).Wait());
+                                                    v.Start();
+                                                }
+                                                catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); }
+                                            } else if(attachment.url != null) {
+                                                try {
+                                                    Console.WriteLine($"url : {attachment.url}");
+                                                    Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), new Uri(attachment.url)).Wait());
+                                                    v.Start();
+                                                }
+                                                catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); }
+                                            }
                                         }
                                     }
 

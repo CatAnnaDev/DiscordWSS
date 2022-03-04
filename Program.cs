@@ -85,7 +85,7 @@ namespace DiscordWSS {
                                         $"{(myDeserializedClass.d.content.Contains("https://") ? MakeLink(myDeserializedClass.d.content) : myDeserializedClass.d.content)}");
 
                                     string MakeLink(string txt) {
-                                        foreach(Match item in Regex.Matches(txt, @"(http|ftp|https):\/\/([\w\-_]+(?:(?:\.[\w\-_]+)+))([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?")) {
+                                        foreach(Match item in Regex.Matches(txt, @"(http|ftp|https):\/\/([\w\-_]+(?:(?:\.[\w\-_]+)+))([\w\-\.,@?^=%&amp;:\/~\+#]*[\w\-\@?^=%&amp;\/~\+#])?")) {
                                             return item.Value;
                                         }
                                         return txt;

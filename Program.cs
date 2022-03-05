@@ -9,12 +9,13 @@ using System.Threading;
 
 namespace DiscordWSS {
     public class Program {
-        private static bool SaveReady = true;
+        private static bool SaveReady = false;
         public static string SaveReady_dir_name = @"/SaveReady"; // path where save 
         public static string Save_dir_name = @"/img"; // path where save 
         public static string token = "";
 
         static void Main(string[] args) {
+
             Console.ResetColor();
             try {
                 
@@ -120,11 +121,21 @@ namespace DiscordWSS {
                                                 return txt;
                                             }
 
+                                            string ServerNameRegex(string txt) {
+                                                if(txt.Contains("𝒦𝒾𝓃𝑔𝒹")) {
+                                                    txt = "Kingdom";
+                                                }
+                                                foreach(Match item in Regex.Matches(txt, "[^a-zA-Z -_]+/g")) {
+                                                    return item.Value;
+                                                }
+                                                return txt;
+                                            }
+
                                             if(myDeserializedClass.d.attachments != null) {
                                                 try {
                                                     foreach(var attachment in myDeserializedClass.d.attachments) {
                                                         Console.WriteLine($"Received message: {attachment.url}");
-                                                        Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), new Uri(attachment.url)).Wait());
+                                                        Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex( GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.url)).Wait());
                                                         v.Start();
                                                     }
                                                 }
@@ -137,7 +148,7 @@ namespace DiscordWSS {
                                                     if(attachment.image != null) {
                                                         try {
                                                             Console.WriteLine($"image : {attachment.image.url}");
-                                                            Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), new Uri(attachment.image.url)).Wait());
+                                                            Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.image.url)).Wait());
                                                             v.Start();
                                                         }
                                                         catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); }
@@ -145,14 +156,14 @@ namespace DiscordWSS {
                                                     } else if(attachment.video != null) {
                                                         try {
                                                             Console.WriteLine($"vidéo : {attachment.video.url}");
-                                                            Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), new Uri(attachment.video.url)).Wait());
+                                                            Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.video.url)).Wait());
                                                             v.Start();
                                                         }
                                                         catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); }
                                                     } else if(attachment.url != null) {
                                                         try {
                                                             Console.WriteLine($"url : {attachment.url}");
-                                                            Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), new Uri(attachment.url)).Wait());
+                                                            Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.url)).Wait());
                                                             v.Start();
                                                         }
                                                         catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); }

@@ -9,15 +9,26 @@ using System.Threading.Tasks;
 namespace DiscordWSS {
     public class DLImage {
 
-        public static async Task DownloadImageAsync(string directoryPath, string fileName, Uri uri) {
+        public static async Task DownloadImageAsync(string directoryPath, string fileName,string ServerName, Uri uri) {
             Console.WriteLine($"Download size: {SizeSuffix(uri.ToString(), 2)}");
             using var httpClient = new HttpClient();
 
             var uriWithoutQuery = uri.GetLeftPart(UriPartial.Path);
             var fileExtension = Path.GetExtension(uriWithoutQuery);
 
-            var path = Path.Combine(directoryPath, $"{fileName}{fileExtension}");
-            Directory.CreateDirectory(directoryPath);
+            if(Save.SaveData(Path.GetFileNameWithoutExtension(uriWithoutQuery)))
+                fileName = Path.GetFileNameWithoutExtension(uriWithoutQuery) + $" ({fileName})";
+            else
+                fileName = Path.GetFileNameWithoutExtension(uriWithoutQuery);
+
+            var path = Path.Combine(directoryPath + "/" + ServerName, $"{fileName}{fileExtension}");
+
+            if(!Directory.Exists(directoryPath +"/"+ ServerName)) {
+                try {
+                    Directory.CreateDirectory(directoryPath + "/" + ServerName);
+                }
+                catch { }
+            }
 
             var imageBytes = await httpClient.GetByteArrayAsync(uri);
             await File.WriteAllBytesAsync(path, imageBytes);

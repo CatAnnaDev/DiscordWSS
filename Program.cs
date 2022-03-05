@@ -15,12 +15,12 @@ namespace DiscordWSS {
     public class Program {
 
         public static string Save_dir_name = @"/img"; // path where save 
+        public static string token = "";
 
         static void Main(string[] args) {
 
             try {
-                string token = "";
-
+                
                 string jsonData = @"{'op': 2,'d': {'token': '','properties': {'$os': 'windows','$browser': 'chrome','$device': 'pc'}}}";
                
                 var socket = new ClientWebSocket();
@@ -56,7 +56,7 @@ namespace DiscordWSS {
 
                     while(true) {
 
-                        Thread.Sleep(hb/2);
+                        Thread.Sleep(100);
                         var buffer = new ArraySegment<byte>(new byte[2048]);
                         if(result.CloseStatus.HasValue) {
                             Console.WriteLine("Closed; Status: " + result.CloseStatus + ", " + result.CloseStatusDescription);
@@ -71,7 +71,7 @@ namespace DiscordWSS {
                                 if(result.MessageType == WebSocketMessageType.Close)
                                     break;
 
-                                ms.Seek(0, System.IO.SeekOrigin.Begin);
+                                ms.Seek(0, SeekOrigin.Begin);
 
                                 string jsonss = Encoding.UTF8.GetString(ms.ToArray());
                                 dynamic parsedJson = JsonConvert.DeserializeObject(jsonss);
@@ -79,10 +79,10 @@ namespace DiscordWSS {
                                     Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(jsonss);
 
                                     Console.WriteLine($"----------------------------------------------------------\n" +
-                                        $"Received message: " +
-                                        $"[{myDeserializedClass.s}] {myDeserializedClass.t} \n " +
+                                        $"Server: {GCName.get_guild_name(myDeserializedClass.d.guild_id)}\nChannel: {GCName.get_channels_name(myDeserializedClass.d.guild_id, myDeserializedClass.d.channel_id)}\n"+
                                         $"{myDeserializedClass.d.author?.username}#{myDeserializedClass.d.author?.discriminator} : " +
                                         $"{(myDeserializedClass.d.content.Contains("https://") ? MakeLink(myDeserializedClass.d.content) : myDeserializedClass.d.content)}");
+
 
                                     string MakeLink(string txt) {
                                         foreach(Match item in Regex.Matches(txt, @"(http|ftp|https):\/\/([\w\-_]+(?:(?:\.[\w\-_]+)+))([\w\-\.,@?^=%&amp;:\/~\+#]*[\w\-\@?^=%&amp;\/~\+#])?")) {

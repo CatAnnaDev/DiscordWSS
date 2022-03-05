@@ -18,7 +18,7 @@ namespace DiscordWSS {
         public static string token = "";
 
         static void Main(string[] args) {
-
+            Console.ResetColor();
             try {
                 
                 string jsonData = @"{'op': 2,'d': {'token': '','properties': {'$os': 'windows','$browser': 'chrome','$device': 'pc'}}}";
@@ -28,7 +28,7 @@ namespace DiscordWSS {
                 socket.ConnectAsync(new Uri("wss://gateway.discord.gg/?v=9&encording=json"), CancellationToken.None).Wait();
 
                 var buffer = new byte[1024];
-                Console.WriteLine("Receiving");
+                Console.WriteLine("Receiving Data");
                 var result = socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None).Result;
 
                 var jsonParse = Encoding.UTF8.GetString(buffer, 0, result.Count);
@@ -44,7 +44,7 @@ namespace DiscordWSS {
                 void Payload(ClientWebSocket socket, int hb) {
 
                     Thread.Sleep(hb);
-                    Console.WriteLine("Sending Payload");
+                    Console.WriteLine("Sending Payload \n Please WAIT");
                     Payload payload = JsonConvert.DeserializeObject<Payload>(jsonData);
                     payload.d.token = token;
                     Payload payloadCustom = new Payload {
@@ -56,7 +56,7 @@ namespace DiscordWSS {
 
                     while(true) {
 
-                        Thread.Sleep(100);
+                        Thread.Sleep(1500);
                         var buffer = new ArraySegment<byte>(new byte[2048]);
                         if(result.CloseStatus.HasValue) {
                             Console.WriteLine("Closed; Status: " + result.CloseStatus + ", " + result.CloseStatusDescription);
@@ -78,10 +78,29 @@ namespace DiscordWSS {
                                 if(parsedJson.t != null && parsedJson.t == "MESSAGE_CREATE" /*&& parsedJson.d.author?.bot == null*/) {
                                     Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(jsonss);
 
-                                    Console.WriteLine($"----------------------------------------------------------\n" +
-                                        $"Server: {GCName.get_guild_name(myDeserializedClass.d.guild_id)}\nChannel: {GCName.get_channels_name(myDeserializedClass.d.guild_id, myDeserializedClass.d.channel_id)}\n"+
-                                        $"{myDeserializedClass.d.author?.username}#{myDeserializedClass.d.author?.discriminator} : " +
-                                        $"{(myDeserializedClass.d.content.Contains("https://") ? MakeLink(myDeserializedClass.d.content) : myDeserializedClass.d.content)}");
+                                    Console.WriteLine($"----------------------------------------------------------\n");
+                                    Console.WriteLine($"Server: {GCName.get_guild_name(myDeserializedClass.d.guild_id)}\nChannel: {GCName.get_channels_name(myDeserializedClass.d.guild_id, myDeserializedClass.d.channel_id)}");
+
+                                    if(GCName.NSFW.Contains("True")) {
+                                        Console.ForegroundColor = ConsoleColor.DarkRed;
+                                        Console.WriteLine(GCName.NSFW);
+                                        Console.ResetColor();
+                                    } else {
+                                        Console.ForegroundColor = ConsoleColor.DarkGreen;
+                                        Console.WriteLine(GCName.NSFW);
+                                        Console.ResetColor();
+                                    }
+
+                                    Console.ForegroundColor = ConsoleColor.DarkGreen;
+                                    Console.Write($"{myDeserializedClass.d.author?.username}#{myDeserializedClass.d.author?.discriminator} : ");
+                                    Console.WriteLine($"{(myDeserializedClass.d.content.Contains("https://") ? MakeLink(myDeserializedClass.d.content) : myDeserializedClass.d.content)}\n");
+                                    Console.ResetColor();
+
+                                    string url_msg = $"https://discord.com/channels/{myDeserializedClass.d.guild_id}/{myDeserializedClass.d.channel_id}/{myDeserializedClass.d.nonce}\n";
+
+                                    Console.ForegroundColor = ConsoleColor.DarkCyan;
+                                    Console.WriteLine(url_msg);
+                                    Console.ResetColor();
 
 
                                     string MakeLink(string txt) {

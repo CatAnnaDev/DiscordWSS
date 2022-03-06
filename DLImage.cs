@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,28 +11,34 @@ namespace DiscordWSS {
     public class DLImage {
 
         public static async Task DownloadImageAsync(string directoryPath, string fileName,string ServerName, Uri uri) {
-            Console.WriteLine($"Download size: {SizeSuffix(uri.ToString(), 2)}");
-            using var httpClient = new HttpClient();
+            try {
+                Console.WriteLine($"Download size: {SizeSuffix(uri.ToString(), 2)}");
+                using var httpClient = new HttpClient();
 
-            var uriWithoutQuery = uri.GetLeftPart(UriPartial.Path);
-            var fileExtension = Path.GetExtension(uriWithoutQuery);
+                var uriWithoutQuery = uri.GetLeftPart(UriPartial.Path);
+                var fileExtension = Path.GetExtension(uriWithoutQuery);
 
-            if(Save.SaveData(Path.GetFileNameWithoutExtension(uriWithoutQuery)))
-                fileName = Path.GetFileNameWithoutExtension(uriWithoutQuery) + $" ({fileName})";
-            else
-                fileName = Path.GetFileNameWithoutExtension(uriWithoutQuery);
+                if(Save.SaveData(Path.GetFileNameWithoutExtension(uriWithoutQuery)))
+                    fileName = Path.GetFileNameWithoutExtension(uriWithoutQuery) + $" ({RandomNumber(0, 5000)})";
+                else
+                    fileName = Path.GetFileNameWithoutExtension(uriWithoutQuery);
 
-            var path = Path.Combine(directoryPath + "/" + ServerName, $"{fileName}{fileExtension}");
+                var path = Path.Combine(directoryPath + "/" + ServerName, $"{fileName}{fileExtension}");
 
-            if(!Directory.Exists(directoryPath +"/"+ ServerName)) {
-                try {
-                    Directory.CreateDirectory(directoryPath + "/" + ServerName);
+                if(!Directory.Exists(directoryPath + "/" + ServerName)) {
+                    try {
+                        Directory.CreateDirectory(directoryPath + "/" + ServerName);
+                    }
+                    catch { }
                 }
-                catch { }
-            }
 
-            var imageBytes = await httpClient.GetByteArrayAsync(uri);
-            await File.WriteAllBytesAsync(path, imageBytes);
+                var imageBytes = await httpClient.GetByteArrayAsync(uri);
+                await File.WriteAllBytesAsync(path, imageBytes);
+            }
+            catch(WebException e) {
+                Console.WriteLine("This program is expected to throw WebException on successful run." +
+                                    "\n\nException Message :" + e.Message);
+            }
         }
 
         public static readonly string[] SizeSuffixes = { "bytes", "KB", "MB", "GB" };
@@ -48,7 +55,7 @@ namespace DiscordWSS {
             }
 
 
-            if(decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
+            //if(decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
             if(result == 0) { return string.Format("{0:n" + decimalPlaces + "} bytes", 0); }
 
             int mag = (int)Math.Log(result, 1024);
@@ -59,10 +66,9 @@ namespace DiscordWSS {
                 mag += 1;
                 adjustedSize /= 1024;
             }
+            
+            return string.Format("{0:n" + decimalPlaces + "} {1}", adjustedSize, SizeSuffixes[mag]);
 
-            return string.Format("{0:n" + decimalPlaces + "} {1}",
-                adjustedSize,
-                SizeSuffixes[mag]);
         }
 
         private static readonly Random _random = new Random();

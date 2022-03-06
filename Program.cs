@@ -74,6 +74,9 @@ namespace DiscordWSS {
                                     string jsonss = Encoding.UTF8.GetString(ms.ToArray());
                                     parsedJson = JsonConvert.DeserializeObject(jsonss);
 
+                                    if(parsedJson.t == "SESSIONS_REPLACE")
+                                        return;
+
                                     if(parsedJson.t != null /*&& parsedJson.d.author?.bot == null*/) {
                                         if(parsedJson.t == "READY") {
                                             Console.WriteLine($"Welcome {parsedJson.d.user.username}#{parsedJson.d.user.discriminator}\n");
@@ -103,8 +106,18 @@ namespace DiscordWSS {
 
                                             Console.ForegroundColor = ConsoleColor.DarkGreen;
                                             Console.Write($"{myDeserializedClass.d.author?.username}#{myDeserializedClass.d.author?.discriminator} : ");
-                                            Console.WriteLine($"{(myDeserializedClass.d.content.Contains("https://") ? MakeLink(myDeserializedClass.d.content) : myDeserializedClass.d.content)}\n");
+                                            Console.WriteLine($"{(myDeserializedClass.d.content)}\n");
                                             Console.ResetColor();
+
+                                            if(myDeserializedClass.d.content.Contains("https://")) {
+                                                //Console.WriteLine($"Received message: {myDeserializedClass.d.content}");
+                                                try {
+                                                    Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(MakeLink(myDeserializedClass.d.content))).Wait());
+                                                    v.Start();
+                                                }
+                                                catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); }
+                                            }
+                                                
 
                                             string url_msg = $"https://discord.com/channels/{myDeserializedClass.d.guild_id}/{myDeserializedClass.d.channel_id}/{myDeserializedClass.d.nonce}\n";
 
@@ -174,7 +187,7 @@ namespace DiscordWSS {
                                         }
                                     }
                                 }
-                            }catch (Exception ex) { Console.WriteLine(parsedJson.t + "\n"+ ex.Message); }
+                            }catch (Exception ex) { Console.WriteLine(parsedJson.t + " ERROR\n"+ ex.Message); }
                         }
 
                         static string format_json(string json) {

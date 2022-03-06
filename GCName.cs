@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace DiscordWSS {
     public class GCName {

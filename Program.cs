@@ -13,6 +13,7 @@ namespace DiscordWSS {
         public static string SaveReady_dir_name = @"/SaveReady"; // path where save 
         public static string Save_dir_name = @"/img"; // path where save 
         public static string token = "";
+        private static dynamic parsedJson;
 
         static void Main(string[] args) {
 
@@ -33,11 +34,9 @@ namespace DiscordWSS {
                 dynamic jsons = JToken.Parse(jsonParse.ToString());
                 int hb = jsons["d"]["heartbeat_interval"] / 50;
 
-                Thread t = new Thread(() => heartbeat.Heartbeat(socket, hb));
-                t.Start();
+                new Thread(() => heartbeat.Heartbeat(socket, hb)).Start();
 
-                Thread v = new Thread(() => Payload(socket, hb));
-                v.Start();
+                new Thread(() => Payload(socket, hb)).Start();
 
                 void Payload(ClientWebSocket socket, int hb) {
 
@@ -54,7 +53,7 @@ namespace DiscordWSS {
 
                     while(true) {
 
-                        Thread.Sleep(1500);
+                        Thread.Sleep(500);
                         var buffer = new ArraySegment<byte>(new byte[2048]);
                         if(result.CloseStatus.HasValue) {
                             Console.WriteLine("Closed; Status: " + result.CloseStatus + ", " + result.CloseStatusDescription);
@@ -73,10 +72,10 @@ namespace DiscordWSS {
                                     ms.Seek(0, SeekOrigin.Begin);
 
                                     string jsonss = Encoding.UTF8.GetString(ms.ToArray());
-                                    dynamic parsedJson = JsonConvert.DeserializeObject(jsonss);
+                                    parsedJson = JsonConvert.DeserializeObject(jsonss);
+
                                     if(parsedJson.t != null /*&& parsedJson.d.author?.bot == null*/) {
                                         if(parsedJson.t == "READY") {
-                                            Console.WriteLine($"\nCan view NSFW ?{parsedJson.d.user_settings.view_nsfw_guilds}");
                                             Console.WriteLine($"Welcome {parsedJson.d.user.username}#{parsedJson.d.user.discriminator}\n");
                                             if(SaveReady) {
                                                 Directory.CreateDirectory(Directory.GetCurrentDirectory() + SaveReady_dir_name);
@@ -128,14 +127,14 @@ namespace DiscordWSS {
                                                 foreach(Match item in Regex.Matches(txt, "[^a-zA-Z -_]+/g")) {
                                                     return item.Value;
                                                 }
-                                                return txt;
+                                                return txt.Replace("|", "") ;
                                             }
 
                                             if(myDeserializedClass.d.attachments != null) {
                                                 try {
                                                     foreach(var attachment in myDeserializedClass.d.attachments) {
                                                         Console.WriteLine($"Received message: {attachment.url}");
-                                                        Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex( GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.url)).Wait());
+                                                        Thread v = new Thread(() =>DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex( GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.url)).Wait());
                                                         v.Start();
                                                     }
                                                 }
@@ -175,7 +174,7 @@ namespace DiscordWSS {
                                         }
                                     }
                                 }
-                            }catch (Exception ex) { Console.WriteLine(ex.Message); }
+                            }catch (Exception ex) { Console.WriteLine(parsedJson.t + "\n"+ ex.Message); }
                         }
 
                         static string format_json(string json) {
@@ -189,7 +188,7 @@ namespace DiscordWSS {
                 }
             }
             catch(Exception ex) {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine(ex.Message);
             }
         }
     }

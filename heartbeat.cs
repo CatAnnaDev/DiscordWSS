@@ -18,8 +18,7 @@ namespace DiscordWSS {
                 socket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(details.ToString())), WebSocketMessageType.Text, true, CancellationToken.None).Wait();
                 Thread.Sleep(hb);
             }
-
-            Console.WriteLine(details.ToString());
+            Logger.Log(Logger.LogLevel.info, details.ToString());
         }
 
 

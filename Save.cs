@@ -19,7 +19,7 @@ namespace DiscordWSS {
                     fi = new FileInfo(fis);
                 }
                 catch(FileNotFoundException e) {
-                    Console.WriteLine(e.Message);
+                    Logger.Log(Logger.LogLevel.error, e.Message);
                     continue;
                 }
                 if(fi.Name == name)

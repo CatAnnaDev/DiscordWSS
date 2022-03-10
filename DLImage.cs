@@ -12,7 +12,7 @@ namespace DiscordWSS {
 
         public static async Task DownloadImageAsync(string directoryPath, string fileName,string ServerName, Uri uri) {
             try {
-                Console.WriteLine($"Download size: {SizeSuffix(uri.ToString(), 2)}");
+                Logger.Log(Logger.LogLevel.info, $"Download size: {SizeSuffix(uri.ToString(), 2)}");
                 using var httpClient = new HttpClient();
 
                 var uriWithoutQuery = uri.GetLeftPart(UriPartial.Path);
@@ -36,8 +36,7 @@ namespace DiscordWSS {
                 await File.WriteAllBytesAsync(path, imageBytes);
             }
             catch(WebException e) {
-                Console.WriteLine("This program is expected to throw WebException on successful run." +
-                                    "\n\nException Message :" + e.Message);
+                Logger.Log(Logger.LogLevel.error, "This program is expected to throw WebException on successful run. \n\nException Message :" + e.Message);
             }
         }
 

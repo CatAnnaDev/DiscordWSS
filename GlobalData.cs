@@ -19,7 +19,7 @@ namespace DiscordWSS {
             if(!File.Exists(ConfigPath)) {
                 json = JsonConvert.SerializeObject(GenerateNewConfig(), Formatting.Indented);
                 File.WriteAllText("Config.json", json, new UTF8Encoding(false));
-                Console.WriteLine("Please read Config.json");
+                Logger.Log(Logger.LogLevel.info, "Please read Config.json");
                 await Task.Delay(-1);
             }
 

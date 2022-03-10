@@ -44,11 +44,11 @@ namespace DiscordWSS {
                 string jsonData = @"{'op': 2,'d': {'token': '','properties': {'$os': 'windows','$browser': 'chrome','$device': 'pc'}}}";
 
                 var socket = new ClientWebSocket();
-                Console.WriteLine("Connecting");
+                Logger.Log(Logger.LogLevel.info, "Connecting");
                 socket.ConnectAsync(new Uri("wss://gateway.discord.gg/?v=9&encording=json"), CancellationToken.None).Wait();
 
                 var buffer = new byte[1024];
-                Console.WriteLine("Receiving Data");
+                Logger.Log(Logger.LogLevel.info, "Receiving Data");
                 var result = socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None).Result;
 
                 var jsonParse = Encoding.UTF8.GetString(buffer, 0, result.Count);
@@ -62,7 +62,7 @@ namespace DiscordWSS {
                 void Payload(ClientWebSocket socket, int hb) {
 
                     Thread.Sleep(hb);
-                    Console.WriteLine("Sending Payload \nPlease WAIT");
+                    Logger.Log(Logger.LogLevel.info, "Sending Payload \nPlease WAIT");
                     Payload payload = JsonConvert.DeserializeObject<Payload>(jsonData);
                     payload.d.token = token;
                     Payload payloadCustom = new Payload {
@@ -77,7 +77,7 @@ namespace DiscordWSS {
                         Thread.Sleep(500);
                         var buffer = new ArraySegment<byte>(new byte[2048]);
                         if(result.CloseStatus.HasValue) {
-                            Console.WriteLine("Closed; Status: " + result.CloseStatus + ", " + result.CloseStatusDescription);
+                            Logger.Log(Logger.LogLevel.warning, "Closed; Status: " + result.CloseStatus + ", " + result.CloseStatusDescription);
                         } else {
 
                             try {
@@ -100,13 +100,13 @@ namespace DiscordWSS {
 
                                     if(parsedJson.t != null /*&& parsedJson.d.author?.bot == null*/) {
                                         if(parsedJson.t == "READY") {
-                                            Console.WriteLine($"Welcome {parsedJson.d.user.username}#{parsedJson.d.user.discriminator}\n");
+                                            Logger.Log(Logger.LogLevel.info, $"Welcome {parsedJson.d.user.username}#{parsedJson.d.user.discriminator}\n");
                                             if(SaveReady) {
                                                 Directory.CreateDirectory(Directory.GetCurrentDirectory() + SaveReady_dir_name);
                                                 using(StreamWriter writetext = new StreamWriter(Path.Combine(Directory.GetCurrentDirectory() + SaveReady_dir_name, "ReadyData.json"))) {
                                                     writetext.WriteLine(format_json(jsonss));
                                                 }
-                                                Console.WriteLine($"ReadyData has been saved here : {Directory.GetCurrentDirectory() + @"\ReadyData\ReadyData.json"}");
+                                                Logger.Log(Logger.LogLevel.info, $"ReadyData has been saved here : {Directory.GetCurrentDirectory() + $@"{SaveReady_dir_name}\ReadyData.json"}");
                                             }
                                         }
                                         Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(jsonss);
@@ -116,19 +116,12 @@ namespace DiscordWSS {
                                             Console.WriteLine($"Server: {GCName.get_guild_name(myDeserializedClass.d.guild_id)}\nChannel: {GCName.get_channels_name(myDeserializedClass.d.guild_id, myDeserializedClass.d.channel_id)}");
 
                                             if(GCName.NSFW.Contains("True")) {
-                                                Console.ForegroundColor = ConsoleColor.DarkRed;
-                                                Console.WriteLine(GCName.NSFW);
-                                                Console.ResetColor();
+                                                Logger.Log(Logger.LogLevel.red, GCName.NSFW);
                                             } else {
-                                                Console.ForegroundColor = ConsoleColor.DarkGreen;
-                                                Console.WriteLine(GCName.NSFW);
-                                                Console.ResetColor();
+                                                Logger.Log(Logger.LogLevel.green, GCName.NSFW);
                                             }
 
-                                            Console.ForegroundColor = ConsoleColor.DarkGreen;
-                                            Console.Write($"{myDeserializedClass.d.author?.username}#{myDeserializedClass.d.author?.discriminator} : ");
-                                            Console.WriteLine($"{(myDeserializedClass.d.content)}\n");
-                                            Console.ResetColor();
+                                            Logger.Log(Logger.LogLevel.green, $"{myDeserializedClass.d.author?.username}#{myDeserializedClass.d.author?.discriminator} : " + $"{(myDeserializedClass.d.content)}\n");
 
                                             if(myDeserializedClass.d.content.Contains("https://") && SaveImg) {
                                                 //Console.WriteLine($"Received message: {myDeserializedClass.d.content}");
@@ -136,15 +129,13 @@ namespace DiscordWSS {
                                                     Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(MakeLink(myDeserializedClass.d.content))).Wait());
                                                     v.Start();
                                                 }
-                                                catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); }
+                                                catch(Exception ex) { Logger.Log(Logger.LogLevel.error, $"Can't Download this file \n{ex.Message}"); }
                                             }
 
 
                                             string url_msg = $"https://discord.com/channels/{myDeserializedClass.d.guild_id}/{myDeserializedClass.d.channel_id}/{myDeserializedClass.d.nonce}\n";
 
-                                            Console.ForegroundColor = ConsoleColor.DarkCyan;
-                                            Console.WriteLine(url_msg);
-                                            Console.ResetColor();
+                                            Logger.Log(Logger.LogLevel.blue, url_msg);
 
 
                                             string MakeLink(string txt) {
@@ -172,7 +163,7 @@ namespace DiscordWSS {
                                                         v.Start();
                                                     }
                                                 }
-                                                catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); };
+                                                catch(Exception ex) { Logger.Log(Logger.LogLevel.error, $"Can't Download this file \n{ex.Message}"); };
 
                                             }
 
@@ -184,7 +175,7 @@ namespace DiscordWSS {
                                                             Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.image.url)).Wait());
                                                             v.Start();
                                                         }
-                                                        catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); }
+                                                        catch(Exception ex) { Logger.Log(Logger.LogLevel.error, $"Can't Download this file \n{ex.Message}"); }
 
                                                     } else if(attachment.video != null) {
                                                         try {
@@ -192,14 +183,14 @@ namespace DiscordWSS {
                                                             Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.video.url)).Wait());
                                                             v.Start();
                                                         }
-                                                        catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); }
+                                                        catch(Exception ex) { Logger.Log(Logger.LogLevel.error, $"Can't Download this file \n{ex.Message}"); }
                                                     } else if(attachment.url != null && !attachment.url.Contains("redd.it")) {
                                                         try {
                                                             Console.WriteLine($"url : {attachment.url}");
                                                             Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.url)).Wait());
                                                             v.Start();
                                                         }
-                                                        catch(Exception ex) { Console.WriteLine("Can't Download this file \n{0}", ex.Message); }
+                                                        catch(Exception ex) { Logger.Log(Logger.LogLevel.error, $"Can't Download this file \n{ex.Message}"); }
                                                     }
                                                 }
                                             }
@@ -209,7 +200,7 @@ namespace DiscordWSS {
                                     }
                                 }
                             }
-                            catch(Exception ex) { Console.WriteLine(parsedJson.t + " ERROR\n" + ex.Message); }
+                            catch(Exception ex) { Logger.Log(Logger.LogLevel.error, parsedJson.t + " ERROR\n" + ex.Message); }
                         }
 
                         static string format_json(string json) {
@@ -223,7 +214,7 @@ namespace DiscordWSS {
                 }
             }
             catch(Exception ex) {
-                Console.WriteLine(ex.Message);
+                Logger.Log(Logger.LogLevel.error, ex.Message);
             }
         }
     }

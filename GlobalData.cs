@@ -28,12 +28,12 @@ namespace DiscordWSS {
         }
 
         private static BotConfig GenerateNewConfig() => new BotConfig {
-            //BOT
             Token = "TOKEN HERE",
-            SaveImgPath = @"C://Path",
+            SaveImgPath = @"/Ready",
             SaveImg = true,
-            SaveReadyPath = @"C://Path",
+            SaveReadyPath = @"/img",
             SaveReady = false,
+            ResolveServerName = true,
         };
     }
 }

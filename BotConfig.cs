@@ -11,5 +11,7 @@ namespace DiscordWSS {
         public bool SaveImg { get; set; }
         public string SaveReadyPath { get; set; }
         public bool SaveReady { get; set; }
+
+        public bool ResolveServerName { get; set; }
     }
 }

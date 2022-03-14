@@ -16,9 +16,10 @@ namespace DiscordWSS {
         private static string SaveReady_dir_name;
         public static string Save_dir_name;
         public static string token;
+        private static bool ResolveServerName;
         private static dynamic parsedJson;
 
-        static void Main(string[] args) => new Program().Start().GetAwaiter().GetResult();
+        static void Main(string[] args) => new Program().Start().GetAwaiter();
 
         public async Task Start() {
             _globalData = new GlobalData();
@@ -37,6 +38,7 @@ namespace DiscordWSS {
             SaveImg = GlobalData.Config.SaveImg;
             Save_dir_name = GlobalData.Config.SaveImgPath; // path where save 
             token = GlobalData.Config.Token;
+            ResolveServerName = GlobalData.Config.ResolveServerName;
 
 
             try {
@@ -74,7 +76,8 @@ namespace DiscordWSS {
 
                     while(true) {
 
-                        Thread.Sleep(500);
+                        if(!ResolveServerName)
+                            Thread.Sleep(500);
                         var buffer = new ArraySegment<byte>(new byte[2048]);
                         if(result.CloseStatus.HasValue) {
                             Logger.Log(Logger.LogLevel.warning, "Closed; Status: " + result.CloseStatus + ", " + result.CloseStatusDescription);
@@ -113,24 +116,19 @@ namespace DiscordWSS {
                                         if(myDeserializedClass.d.content != null) {
 
                                             Console.WriteLine($"----------------------------------------------------------\n");
-                                            Console.WriteLine($"Server: {GCName.get_guild_name(myDeserializedClass.d.guild_id)}\nChannel: {GCName.get_channels_name(myDeserializedClass.d.guild_id, myDeserializedClass.d.channel_id)}");
+                                            if(ResolveServerName) {
+                                                Console.WriteLine($"Server: {GCName.get_guild_name(myDeserializedClass.d.guild_id)}\nChannel: {GCName.get_channels_name(myDeserializedClass.d.guild_id, myDeserializedClass.d.channel_id)}");
 
-                                            if(GCName.NSFW.Contains("True")) {
-                                                Logger.Log(Logger.LogLevel.red, GCName.NSFW);
-                                            } else {
-                                                Logger.Log(Logger.LogLevel.green, GCName.NSFW);
+                                                if(GCName.NSFW.Contains("True")) {
+                                                    Logger.Log(Logger.LogLevel.red, GCName.NSFW);
+                                                } else {
+                                                    Logger.Log(Logger.LogLevel.green, GCName.NSFW);
+                                                }
                                             }
 
                                             Logger.Log(Logger.LogLevel.green, $"{myDeserializedClass.d.author?.username}#{myDeserializedClass.d.author?.discriminator} : " + $"{(myDeserializedClass.d.content)}\n");
 
-                                            if(myDeserializedClass.d.content.Contains("https://") && SaveImg) {
-                                                //Console.WriteLine($"Received message: {myDeserializedClass.d.content}");
-                                                try {
-                                                    Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(MakeLink(myDeserializedClass.d.content))).Wait());
-                                                    v.Start();
-                                                }
-                                                catch(Exception ex) { Logger.Log(Logger.LogLevel.error, $"Can't Download this file \n{ex.Message}"); }
-                                            }
+
 
 
                                             string url_msg = $"https://discord.com/channels/{myDeserializedClass.d.guild_id}/{myDeserializedClass.d.channel_id}/{myDeserializedClass.d.nonce}\n";
@@ -155,47 +153,42 @@ namespace DiscordWSS {
                                                 return txt.Replace("|", "");
                                             }
 
-                                            if(myDeserializedClass.d.attachments != null && SaveImg) {
+                                            if(!Directory.Exists(Directory.GetCurrentDirectory() + Save_dir_name)) {
                                                 try {
-                                                    foreach(var attachment in myDeserializedClass.d.attachments) {
-                                                        Console.WriteLine($"attachment.url: {attachment.url}");
-                                                        Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.url)).Wait());
-                                                        v.Start();
-                                                    }
+                                                    Directory.CreateDirectory(Directory.GetCurrentDirectory() + Save_dir_name);
                                                 }
-                                                catch(Exception ex) { Logger.Log(Logger.LogLevel.error, $"Can't Download this file \n{ex.Message}"); };
+                                                catch { }
+                                            }
+
+                                            void DL(string url) {
+                                                Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(url)).Wait());
+                                                v.Start();
+                                            }
+
+                                            if(myDeserializedClass.d.content.Contains("https://") && SaveImg) {
+                                                DL(MakeLink(myDeserializedClass.d.content));
+                                            }
+
+                                            if(myDeserializedClass.d.attachments != null && SaveImg) {
+                                                foreach(var attachment in myDeserializedClass.d.attachments) {
+                                                    DL(MakeLink(attachment.url));
+                                                }
 
                                             }
 
                                             if(myDeserializedClass.d.embeds != null && SaveImg) {
                                                 foreach(var attachment in myDeserializedClass.d.embeds) {
                                                     if(attachment.image != null) {
-                                                        try {
-                                                            Console.WriteLine($"image : {attachment.image.url}");
-                                                            Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.image.url)).Wait());
-                                                            v.Start();
-                                                        }
-                                                        catch(Exception ex) { Logger.Log(Logger.LogLevel.error, $"Can't Download this file \n{ex.Message}"); }
-
+                                                        DL(MakeLink(attachment.image.url));
                                                     } else if(attachment.video != null) {
-                                                        try {
-                                                            Console.WriteLine($"vidéo : {attachment.video.url}");
-                                                            Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.video.url)).Wait());
-                                                            v.Start();
-                                                        }
-                                                        catch(Exception ex) { Logger.Log(Logger.LogLevel.error, $"Can't Download this file \n{ex.Message}"); }
+                                                        DL(MakeLink(attachment.video.url));
                                                     } else if(attachment.url != null && !attachment.url.Contains("redd.it")) {
-                                                        try {
-                                                            Console.WriteLine($"url : {attachment.url}");
-                                                            Thread v = new Thread(() => DLImage.DownloadImageAsync(Environment.CurrentDirectory.ToString() + Save_dir_name, DLImage.RandomNumber(0, 5000).ToString(), ServerNameRegex(GCName.get_guild_name(myDeserializedClass.d.guild_id)), new Uri(attachment.url)).Wait());
-                                                            v.Start();
-                                                        }
-                                                        catch(Exception ex) { Logger.Log(Logger.LogLevel.error, $"Can't Download this file \n{ex.Message}"); }
+                                                        DL(MakeLink(attachment.url));
                                                     }
                                                 }
                                             }
 
-                                            File.AppendAllText(@"C:\Temp\csc.txt", parsedJson + Environment.NewLine);
+                                            //File.AppendAllText(@"C:\Temp\csc.txt", parsedJson + Environment.NewLine);
                                         }
                                     }
                                 }

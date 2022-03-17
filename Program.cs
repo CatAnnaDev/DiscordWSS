@@ -55,7 +55,7 @@ namespace DiscordWSS {
 
                 string jsonData = @"{'op': 2,'d': {'token': '','properties': {'$os': 'windows','$browser': 'chrome','$device': 'pc'}}}";
 
-                string RPC = @"{'op': 3, 'd': {'since': 1,'activities': [{'name': '','type': 3,'url': ''}],'status': '','afk': false}}";
+                string RPC = @"{'op': 3, 'd': {'since': 91879201,'activities': [{'name': '','type': 3,'url': ''}],'status': '','afk': false}}";
 
                 var socket = new ClientWebSocket();
                 Logger.Log(Logger.LogLevel.info, "Connecting");
@@ -105,8 +105,6 @@ namespace DiscordWSS {
                     Logger.Log(Logger.LogLevel.info, "Sending Custom RPC\n");
                     var RPC_detail = JsonConvert.SerializeObject(payloadCustomRPC);
                     socket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(RPC_detail.ToString())), WebSocketMessageType.Text, true, CancellationToken.None);
-
-                    Thread.Sleep(1000);
 
                     while (true) {
 

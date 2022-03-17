@@ -29,10 +29,10 @@ namespace DiscordWSS {
 
         private static BotConfig GenerateNewConfig() => new BotConfig {
             Token = "TOKEN HERE",
-            SaveImgPath = @"/Ready",
-            SaveImg = true,
-            SaveReadyPath = @"/img",
+            SaveImgPath = @"/SaveReady",
             SaveReady = false,
+            SaveReadyPath = @"/img",
+            SaveImg = true,
             ResolveServerName = true,
             status = "invisible",
             name = "DiscordWSS",

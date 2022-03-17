@@ -19,6 +19,11 @@ namespace DiscordWSS {
         private static bool ResolveServerName;
         private static dynamic parsedJson;
 
+        // RPC
+        private static string status;
+        private static string name;
+        private static int type;
+
         static void Main(string[] args) => new Program().Start().GetAwaiter();
 
         public async Task Start() {
@@ -40,10 +45,17 @@ namespace DiscordWSS {
             token = GlobalData.Config.Token;
             ResolveServerName = GlobalData.Config.ResolveServerName;
 
+            // RPC
+            status = GlobalData.Config.status;
+            name = GlobalData.Config.name;
+            type = GlobalData.Config.type;
+
 
             try {
 
                 string jsonData = @"{'op': 2,'d': {'token': '','properties': {'$os': 'windows','$browser': 'chrome','$device': 'pc'}}}";
+
+                string RPC = @"{'op': 3, 'd': {'since': 1,'activities': [{'name': '','type': 3,'url': ''}],'status': '','afk': false}}";
 
                 var socket = new ClientWebSocket();
                 Logger.Log(Logger.LogLevel.info, "Connecting");
@@ -63,18 +75,40 @@ namespace DiscordWSS {
 
                 void Payload(ClientWebSocket socket, int hb) {
 
-                    Thread.Sleep(hb);
-                    Logger.Log(Logger.LogLevel.info, "Sending Payload \nPlease WAIT");
+                    Thread.Sleep(1000);
+                    Logger.Log(Logger.LogLevel.info, "Please WAIT");
+
                     Payload payload = JsonConvert.DeserializeObject<Payload>(jsonData);
                     payload.d.token = token;
                     Payload payloadCustom = new Payload {
                         op = payload.op,
                         d = payload.d,
                     };
+
+                    Logger.Log(Logger.LogLevel.info, "Sending Payload");
                     var details = JsonConvert.SerializeObject(payloadCustom);
                     socket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(details.ToString())), WebSocketMessageType.Text, true, CancellationToken.None).Wait();
+                    Thread.Sleep(1000);
 
-                    while(true) {
+                    DataRPC payload_RPC = JsonConvert.DeserializeObject<DataRPC>(RPC);
+                    payload_RPC.op = 3;
+                    payload_RPC.d.status = status;
+                    payload_RPC.d.afk = false;
+                    payload_RPC.d.activities[0].name = name;
+                    payload_RPC.d.activities[0].type = type;
+                    DataRPC payloadCustomRPC = new DataRPC
+                    {
+                        op = payload_RPC.op,
+                        d = payload_RPC.d,
+                    };
+
+                    Logger.Log(Logger.LogLevel.info, "Sending Custom RPC\n");
+                    var RPC_detail = JsonConvert.SerializeObject(payloadCustomRPC);
+                    socket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(RPC_detail.ToString())), WebSocketMessageType.Text, true, CancellationToken.None);
+
+                    Thread.Sleep(1000);
+
+                    while (true) {
 
                         if(!ResolveServerName)
                             Thread.Sleep(500);
@@ -100,6 +134,9 @@ namespace DiscordWSS {
 
                                     if(parsedJson.t == "SESSIONS_REPLACE")
                                         return;
+
+                                    if (parsedJson.op == 3)
+                                        Console.WriteLine( format_json(parsedJson));
 
                                     if(parsedJson.t != null /*&& parsedJson.d.author?.bot == null*/) {
                                         if(parsedJson.t == "READY") {

@@ -34,6 +34,9 @@ namespace DiscordWSS {
             SaveReadyPath = @"/img",
             SaveReady = false,
             ResolveServerName = true,
+            status = "invisible",
+            name = "DiscordWSS",
+            type = 3
         };
     }
 }

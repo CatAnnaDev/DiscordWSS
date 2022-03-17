@@ -21,6 +21,14 @@ mutli link support<br>
 token = "" # authorization token in request header message (xhr type) copy past it into the Config.json<br>
 <br>
 slow down heartbeat interval to 41.25sec to prevent wss reconnect or crash <br>
-update WSS to edit RPC
+update WSS to edit RPC<br>
+<br>
+Activity_type<br>
+0	Game	Playing {name}<br>
+1	Streaming	Streaming {details}<br>
+2	Listening	Listening to {name}<br>
+3	Watching	Watching {name}<br>
+4	Custom	{emoji} {name}<br>
+5	Competing	Competing in {name}<br>
 
 ![](https://cdn.discordapp.com/attachments/798446141200269313/951483319487459399/unknown.png)
